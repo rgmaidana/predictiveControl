@@ -13,7 +13,7 @@ Currently it supports only Model-Predictive Control (MPC), although a class for 
 Clone or download the repository and install with pip:
 
 ```
-sudo pip -e <path_to_repository>
+pip -e <path_to_repository>
 ```
 
 ## Usage

@@ -26,7 +26,7 @@ You may also set the prediction and control horizons, the actuation limits and t
 
 ```
 from DCMotor import Motor
-from predictiveControl import MPC
+from predictivecontrol import MPC
 
 dcmotor = Motor()
 mpcontroller = MPC(dcmotor)

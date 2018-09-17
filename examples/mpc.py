@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from DCMotor import Motor
-import numpy as np
 import sys
 
 if __name__ == '__main__':
@@ -10,7 +9,7 @@ if __name__ == '__main__':
         from predictivecontrol import MPC
     except ImportError:
         print "\nPredictive control package not installed."
-        print "To install, go to the root folder of this repository and run \"sudo pip install -e .\"\n"
+        print "To install, go to the root folder of this repository and run \"pip install -e .\"\n"
         sys.exit(0)
 
     # Try importing the ODE solver
@@ -18,8 +17,17 @@ if __name__ == '__main__':
         from scipy.integrate import ode
     except ImportError:
         print "\nThis simulation depends on the ODE solver from the scipy package."
-        print "To install, run \"sudo pip install -U scipy\"\n"
+        print "To install, run \"pip install -U scipy\"\n"
         sys.exit(0)
+
+    # Try importing numpy
+    try:
+        import numpy as np
+    except ImportError:
+        print "\nThis simulation depends on the numpy package."
+        print "To install, run \"pip install -U numpy\"\n"
+        sys.exit(0)
+
 
     # Instantiate DC Motor model (sampling time of 0.05 seconds)
     motor = Motor(T=0.05)

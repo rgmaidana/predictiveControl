@@ -3,23 +3,23 @@ from scipy.linalg import block_diag
 
 ''' Model Predictive Control '''
 class MPC:
-    def __init__(self, model, Np=10, Nc=4, umax=1, umin=0, dumax=1, dumin=0, T=0.001, dt=1e-3, **kwargs):
+    def __init__(self, A, dA, B, C, D=0, dist=0, Np=10, Nc=4, umax=1, umin=0, dumax=1, dumin=0, T=0.001, dt=1e-3, **kwargs):
         #### Continuous Dynamic System State-Space ####
-        self.model = model
-
-        # Attempt to get sampling time from model
-        try:
-            self.T = self.model.T
-        except AttributeError:
-            self.T = T      # If undefined, use standard or user-defined sampling time
+        self.A = A
+        self.dA = dA
+        self.B = B
+        self.C = C
+        self.D = D
+        self.dist = dist
+        self.T = T
 
         #### Discrete System State-Space model ####
-        A_d = (np.eye(self.model.A.shape[0]) + (self.model.A+self.model.dA).dot(self.T))
-        B_d = self.model.B.dot(self.T)
+        A_d = (np.eye(self.A.shape[0]) + (self.A+self.dA).dot(self.T))
+        B_d = self.B.dot(self.T)
 
         #### Discrete Augmented State-Space ####
-        self.Aa = np.r_[np.c_[A_d, np.zeros((A_d.shape[0],1))], np.c_[self.model.C.dot(A_d).reshape((1,A_d.shape[1])), np.ones((1,1))]]
-        self.Ba = np.r_[B_d, self.model.C.dot(B_d).reshape((1,1))]
+        self.Aa = np.r_[np.c_[A_d, np.zeros((A_d.shape[0],1))], np.c_[self.C.dot(A_d).reshape((1,A_d.shape[1])), np.ones((1,1))]]
+        self.Ba = np.r_[B_d, self.C.dot(B_d).reshape((1,1))]
         self.Ca = np.c_[np.zeros((1,self.Aa.shape[0]-1)), np.array([[1]])]
         
         #### Model Predictive Controller ####
@@ -28,7 +28,7 @@ class MPC:
         self.F = self.get_F()
         self.P = self.get_P()
         self.u = np.zeros((self.__Nc), dtype=np.float)
-        self.x = np.zeros((self.model.A.shape[0],self.__Np), dtype=np.float)
+        self.x = np.zeros((self.A.shape[0],self.__Np), dtype=np.float)
         self.__Rs = np.zeros((self.F.shape[0],1))                       # Setpoint (reference, init as 0)
         self.H = self.P.T.dot(self.P) + self.__Rs[0]*np.eye(self.P.T.dot(self.P).shape[0])
         self.iH = np.linalg.inv(self.H)
@@ -70,8 +70,8 @@ class MPC:
     def get_control_horizon(self):
         return self.__Nc
 
-    def set_model(self, model):
-        self.__init__(model)
+    def set_model(self, A, dA, B, C, D=0, dist=0):
+        self.__init__(A,dA,B,C,D,dist)
 
     def set_predict_horizon(self, Np):
         self.__Np = Np
@@ -80,7 +80,7 @@ class MPC:
         self.H = self.P.T.dot(self.P) + self.__Rs[0]*np.eye(self.P.T.dot(self.P).shape[0])
         self.iH = np.linalg.inv(self.H)
         self.__Rs = self.__Rs[0]*np.ones((self.F.shape[0],1))
-        self.x = np.zeros((self.model.A.shape[0],self.__Np), dtype=np.float)
+        self.x = np.zeros((self.A.shape[0],self.__Np), dtype=np.float)
     
     def set_control_horizon(self, Nc):
         self.__Nc = Nc
@@ -167,8 +167,8 @@ class MPC:
 ''' Economic Model Predictive Control
     Inherits from MPC class, with the only modification being the minimization function ''' 
 class EMPC(MPC):
-    def __init__(self, model, minFun, **kwargs):
-        MPC.__init__(self, model, **kwargs)
+    def __init__(self, A, B, C, D, minFun, dist=0, **kwargs):
+        MPC.__init__(self, A, B, C, D, dist, **kwargs)
         self.minFun = minFun
 
     def optimize(self, *args):

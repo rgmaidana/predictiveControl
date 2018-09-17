@@ -22,8 +22,7 @@ pip -e <path_to_repository>
 
 ## Usage
 
-Simply import the class of controller wanted and instantiate it with a valid state-space model.
-This model must be a class with the constructive matrices (i.e., A, B, C and D) as attributes.
+Simply import the class of controller wanted and instantiate it with valid state-space model matrices (A,B and C, D and external disturbances are optional).
 Then use the ```run()``` method to update the controller output based on the last sensed or estimated states.
 
 You may also set the prediction and control horizons, the actuation limits and the reference for your control system.

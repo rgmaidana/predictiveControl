@@ -47,19 +47,22 @@ if __name__ == '__main__':
 
     # Run for some seconds
     timeout = 4
+    x = np.array([[0,0],[0,0]], dtype=np.float)
     while True:
         # Run MPC (will update controlled input u)
         mpc.run()
 
         # Solve ODE (simulate motor based on model)
-        solv.set_initial_value(mpc.x0)
+        solv.set_initial_value(mpc.x[:,-1]) # Current initial value is last state
         solv.set_f_params(mpc.u[-1])        # Apply control input into system
         while solv.successful() and solv.t < mpc.T:
             solv.integrate(solv.t+dt)
 
         # Update states (equivalent to sensing)
-        mpc.x0 = solv.y.reshape((2,1))
-        mpc.x = np.c_[mpc.x, mpc.x0]
+        # Number of states kept by MPC are bound by prediction horizon, to avoid memory issues on continuous use
+        mpc.x = np.roll(mpc.x, -1)
+        mpc.x[:,-1] = solv.y
+        x = np.c_[x, mpc.x[:,-1]]
 
         # Append time
         mpc.t = np.append(mpc.t, mpc.t[-1]+mpc.T)
@@ -78,7 +81,7 @@ if __name__ == '__main__':
         import matplotlib.pyplot as plt
         plt.figure()
         plt.plot(mpc.t, np.ones(mpc.t.shape)*mpc.get_reference(), 'k--', lw=2.0)
-        plt.plot(mpc.t, mpc.x[0,:], 'b-', lw=2.0)
+        plt.plot(mpc.t, x[0,:], 'b-', lw=2.0)
         plt.xlabel('Time (s)')
         plt.ylabel('Angular velocity (rad/s)')
         plt.legend(['Reference', 'Output'])

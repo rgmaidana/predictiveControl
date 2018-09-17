@@ -32,7 +32,7 @@ from DCMotor import Motor
 from predictivecontrol import MPC
 
 dcmotor = Motor()
-mpcontroller = MPC(dcmotor)
+mpc = MPC(dcmotor)
 
 mpc.set_predict_horizon(10)
 mpc.set_control_horizon(4)

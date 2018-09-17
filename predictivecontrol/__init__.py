@@ -27,9 +27,8 @@ class MPC:
         self.__Nc = Nc         # Control Horizon
         self.F = self.get_F()
         self.P = self.get_P()
-        self.u = np.zeros((1,1), dtype=np.float)
-        self.x = np.zeros((self.model.A.shape[0],2), dtype=np.float)
-        self.x0 = np.zeros((self.model.A.shape[0],1), dtype=np.float)
+        self.u = np.zeros((self.__Nc), dtype=np.float)
+        self.x = np.zeros((self.model.A.shape[0],self.__Np), dtype=np.float)
         self.__Rs = np.zeros((self.F.shape[0],1))                       # Setpoint (reference, init as 0)
         self.H = self.P.T.dot(self.P) + self.__Rs[0]*np.eye(self.P.T.dot(self.P).shape[0])
         self.iH = np.linalg.inv(self.H)
@@ -81,6 +80,7 @@ class MPC:
         self.H = self.P.T.dot(self.P) + self.__Rs[0]*np.eye(self.P.T.dot(self.P).shape[0])
         self.iH = np.linalg.inv(self.H)
         self.__Rs = self.__Rs[0]*np.ones((self.F.shape[0],1))
+        self.x = np.zeros((self.model.A.shape[0],self.__Np), dtype=np.float)
     
     def set_control_horizon(self, Nc):
         self.__Nc = Nc
@@ -90,6 +90,7 @@ class MPC:
         self.M = np.tril(np.ones((self.__Nc, self.__Nc), dtype=np.float))
         self.M = np.r_[np.r_[np.r_[np.eye(self.__Nc), self.M], -np.eye(self.__Nc)], -np.eye(self.M.shape[0])*self.M]
         self.gamma = np.ones((1,self.__Nc*4), dtype=np.float).T
+        self.u = np.zeros((self.__Nc), dtype=np.float)
 
     def get_reference(self):
         return self.__Rs[0]
@@ -158,8 +159,10 @@ class MPC:
 
         # Quadratic optimization (returns best solution given restrictions M)
         du = self.optimize(f,self.iH)
-        # New control output (based only on first control predicted)
-        self.u = np.append(self.u, du[0] + self.u[-1])
+
+        # New control output (u is bound by control horizon, to avoid memory issues)
+        self.u = np.roll(self.u,-1)
+        self.u[-1] = du[0] + self.u[-2]
 
 ''' Economic Model Predictive Control
     Inherits from MPC class, with the only modification being the minimization function ''' 

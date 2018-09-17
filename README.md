@@ -22,6 +22,7 @@ Simply import the class of controller wanted and instantiate it with a valid sta
 This model must be a class with the constructive matrices (i.e., A, B, C and D) as attributes.
 Then, set the prediction and control horizons, as well as the actuation limits.
 To run the controller, simply use the "run" method, which will update the controller output u based on the last sensed or estimated states.
+You may also set a reference for your control system (by default it is zero).
 
 ```
 from DCMotor import Motor
@@ -34,6 +35,8 @@ mpc.set_predict_horizon(10)
 mpc.set_control_horizon(4)
 mpc.umin, mpc.umax = 0, 100
 mpc.dumin, mpc.dumax = -0.5, 0.5
+
+mpc.set_reference(10)
 
 mpc.run()
 ```

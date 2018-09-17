@@ -18,7 +18,7 @@ class Motor:
         self.B = np.array([0, 1/self.La]).reshape((2,1))
         self.C = np.array([[1, 0]], dtype=np.float)
         self.D = 0
-        self.dist = np.array([[-1/self.J, 0]])         # Input Disturbance
+        self.dist = np.array([[-1/self.J, 0]]).T         # Input Disturbance
 
         self.x = np.zeros((2,1))
         self.y = self.C.dot(self.x)

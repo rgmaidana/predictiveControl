@@ -4,12 +4,13 @@ from DCMotor import Motor
 import sys
 
 if __name__ == '__main__':
-    # Try importing predictiveControl package
+    # Try importing predictivecontrol package
     try:
         from predictivecontrol import MPC
     except ImportError:
-        print "\nPredictive control package not installed."
-        print "To install, go to the root folder of this repository and run \"pip install -e .\"\n"
+        print "\nPredictive control, scipy or numpy packages not installed."
+        print "To install, go to the root folder of this repository and run \"pip install -e .\""
+        print "The predictivecontrol package will automatically install scipy and numpy.\n"
         sys.exit(0)
 
     # Try importing the ODE solver

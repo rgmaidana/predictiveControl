@@ -20,9 +20,9 @@ sudo pip -e <path_to_repository>
 
 Simply import the class of controller wanted and instantiate it with a valid state-space model.
 This model must be a class with the constructive matrices (i.e., A, B, C and D) as attributes.
-Then, set the prediction and control horizons, as well as the actuation limits.
-To run the controller, simply use the "run" method, which will update the controller output u based on the last sensed or estimated states.
-You may also set a reference for your control system (by default it is zero).
+Then use the ```run()``` method to update the controller output based on the last sensed or estimated states.
+
+You may also set the prediction and control horizons, the actuation limits and the reference for your control system.
 
 ```
 from DCMotor import Motor

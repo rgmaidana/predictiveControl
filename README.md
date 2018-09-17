@@ -10,7 +10,11 @@ Currently it supports only Model-Predictive Control (MPC), although a class for 
 
 ## Installation
 
-Clone or download the repository and install with pip:
+Install the package directly from PyPI:
+
+```pip install predictivecontrol```
+
+Or clone the repository and install locally:
 
 ```
 pip -e <path_to_repository>

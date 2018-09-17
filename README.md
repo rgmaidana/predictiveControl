@@ -45,6 +45,9 @@ mpc.run()
 
 A full example of voltage control in a simulated DC Motor can be found in the [examples]() folder.
 The motor is modelled as a Python class, and its constructive parameters can be accessed as class attributes.
+If you want to plot the results, you must install the matplotlib package:
+
+```pip install matplotlib```
 
 ## To-Do
 

@@ -34,7 +34,7 @@ if __name__ == '__main__':
     motor = Motor(T=0.05)
     
     # Instantiate MPC with DC motor model
-    mpc = MPC(motor)
+    mpc = MPC(motor.A, motor.dA, motor.B, motor.C, T=motor.T)
     mpc.set_predict_horizon(15)         # Set prediction horizon
     mpc.set_control_horizon(4)          # Set control horizon
     mpc.umin, mpc.umax = -1, 6          # Set actuation limits

@@ -8,7 +8,7 @@ setup(name='predictivecontrol',
       author_email='renan.maidana@acad.pucrs.br',
       license='MIT',
       packages=['predictivecontrol'],
-      instal_requires=[
+      install_requires=[
           'numpy',
           'scipy'
       ],

@@ -1,2 +1,4 @@
 predictivecontrol.egg-info
 dist
+predictivecontrol/__init__.pyc
+examples/DCMotor.pyc

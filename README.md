@@ -56,6 +56,10 @@ If you want to plot the results, you must install the matplotlib package:
 
 ```pip install matplotlib```
 
+The result you will see is:
+
+![Resulting plot from DC Motor example](examples/dc_motor_angular_vel.png)
+
 ## To-Do
 
 * Test MPC with a different model

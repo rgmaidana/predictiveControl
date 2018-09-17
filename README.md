@@ -43,7 +43,7 @@ mpc.run()
 
 ## Examples
 
-A full example of voltage control in a simulated DC Motor can be found in the [examples]() folder.
+A full example of voltage control in a simulated DC Motor can be found in the [examples](https://github.com/rgmaidana/predictiveControl/tree/master/examples) folder.
 The motor is modelled as a Python class, and its constructive parameters can be accessed as class attributes.
 You can run it with:
 

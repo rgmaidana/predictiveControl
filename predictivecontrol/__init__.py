@@ -168,7 +168,7 @@ class MPC:
     Inherits from MPC class, with the only modification being the minimization function ''' 
 class EMPC(MPC):
     def __init__(self, model, M, gamma, minFun, **kwargs):
-        MPC.__init__(self, model, M, gamma, **kwargs)
+        MPC.__init__(self, model, **kwargs)
         self.minFun = minFun
 
     def optimize(self, *args):

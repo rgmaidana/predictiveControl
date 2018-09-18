@@ -46,17 +46,20 @@ mpc.run()
 
 ## Examples
 
-A full example of voltage control in a simulated DC Motor can be found in the [examples](https://github.com/rgmaidana/predictiveControl/tree/master/examples) folder.
-The motor is modelled as a Python class, and its constructive parameters can be accessed as class attributes.
-You can run it with:
+This package currently contains 2 [examples](https://github.com/rgmaidana/predictiveControl/tree/master/examples):
 
-```python mpc.py```
+* Voltage control in a simulated First-order RC Lowpass filter;
+* Motor shaft angular velocity control in a simulated DC Motor;
+
+You can run the examples with:
+
+```python <example>.py```
 
 If you want to plot the results, you must install the matplotlib package:
 
 ```pip install matplotlib```
 
-The result you will see is:
+The result you will see is (for DC motor example):
 
 ![Resulting plot from DC Motor example](examples/dc_motor_angular_vel.png)
 

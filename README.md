@@ -1,6 +1,6 @@
 # Predictive Control in Python
 
-This package implements Predictive Control techniques in Python (v2.7). 
+This package implements Predictive Control techniques in Python2.7. 
 Currently it supports only Model-Predictive Control (MPC), although a class for Economic MPC has been added (not tested!).
 
 ## Dependencies

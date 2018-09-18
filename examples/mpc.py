@@ -1,7 +1,34 @@
 #!/usr/bin/env python
 
-from DCMotor import Motor
 import sys
+
+# We define a DCMotor class for convenience, and for using its output function in the ODE solver
+class DCMotor:
+    def __init__(self, Ra=8, La=170e-3, J=10e-3, b=3e-3, If=0.5, kt=0.521, kw=0.521, T=0.001, **kwargs):
+        # Constructive parameters
+        self.Ra = Ra
+        self.La = La
+        self.J = J
+        self.b = b
+        self.If = If
+        self.kt = kt
+        self.kw = kw
+
+        # Motor continuous-time state-space
+        self.A = np.array([[-self.b/self.J,      self.kt*self.If/self.J],
+                           [-self.kw*self.If/self.La, -self.Ra/self.La]])
+        self.dA = np.array([[0, 1], [1, 0]]).dot(0.5)  # Derivative of A
+        self.B = np.array([0, 1/self.La]).reshape((2,1))
+        self.C = np.array([[1, 0]], dtype=np.float)
+        self.dist = np.array([[-1/self.J, 0]]).T         # Input Disturbance
+
+        self.T = T
+        self.x = np.zeros((self.A.shape[1],1), dtype=np.float)
+        self.u = np.zeros((self.B.shape[1],1), dtype=np.float)
+        
+    def output(self, t, x, u=0):
+        dx = self.A.dot(x.reshape(self.x.shape)) + self.B.dot(u.reshape(self.u.shape)) # + self.dist
+        return dx
 
 if __name__ == '__main__':
     # Try importing predictivecontrol package
@@ -31,14 +58,14 @@ if __name__ == '__main__':
 
 
     # Instantiate DC Motor model (sampling time of 0.05 seconds)
-    motor = Motor(T=0.05)
+    motor = DCMotor(T=0.05)
     
     # Instantiate MPC with DC motor model
     mpc = MPC(motor.A, motor.dA, motor.B, motor.C, T=motor.T)
     mpc.set_predict_horizon(15)         # Set prediction horizon
     mpc.set_control_horizon(4)          # Set control horizon
-    mpc.umin, mpc.umax = -1, 6          # Set actuation limits
-    mpc.dumin, mpc.dumax = -0.5, 1.5
+    mpc.dumin, mpc.dumax = -0.5, 1.5    # Set restrictions to actuator variation and amplitude
+    mpc.umin, mpc.umax = -1, 6          
     mpc.set_reference(10)               # Set reference (rad/s)
     
     # Setup Nonstiff Ordinary Diff. Equation (ODE) solver (equivalent to matlab's ODE45)

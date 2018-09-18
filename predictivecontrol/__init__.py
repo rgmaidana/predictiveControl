@@ -47,10 +47,10 @@ class MPC:
         # Calculate F
         # Calculate the first loop iteration here because we can't concatenate an empty array in python
         aux = self.Ca
-        F = self.Aa.dot(np.eye(3))       
+        F = self.Aa.dot(np.eye(self.Aa.shape[0]))       
         AA = block_diag(self.Aa, self.Aa)
         for _ in range(1,self.__Np):
-            F = AA.dot(np.r_[np.eye(3), F])
+            F = AA.dot(np.r_[np.eye(self.Aa.shape[0]), F])
             AA = block_diag(self.Aa, AA)
             aux = block_diag(self.Ca, aux)
         F = aux.dot(F)
@@ -100,7 +100,7 @@ class MPC:
         self.H = self.P.T.dot(self.P) + self.__Rs[0]*np.eye(self.P.T.dot(self.P).shape[0])
         self.iH = np.linalg.inv(self.H)
 
-    def optimize(self, f, iH):
+    def optimize(self, iH):
         # QPhild, from Liuping Wang's book
         #
         #  Minimizes the quadratic cost function
@@ -111,6 +111,14 @@ class MPC:
         #  where iH = inv(H)
         
         n1 = self.M.shape[0]
+
+        xa = np.array([], dtype=np.float)
+        for i in range(self.x.shape[0]):
+            xa = np.r_[xa, self.x[i,-1]-self.x[i,-2]]
+        xa = np.r_[xa, self.x[0,-1]]
+        f = self.F.dot(xa)
+        f = f.reshape((f.shape[0],1))
+        f = -(self.__Rs-f).T.dot(self.P).T
 
         # Unconstrained optimal solution is -H/f
         eta = -iH.dot(f)
@@ -152,13 +160,8 @@ class MPC:
         self.gamma = np.c_[self.gamma, np.ones((1,self.__Nc))*(-self.umin+self.u[-1])]
         self.gamma = self.gamma.T
 
-        xa = np.array([ self.x[0,-1]-self.x[0,-2], self.x[1,-1]-self.x[1,-2], self.x[0,-1] ]).T
-        f = self.F.dot(xa)
-        f = f.reshape((f.shape[0],1))
-        f = -(self.__Rs-f).T.dot(self.P).T
-
         # Quadratic optimization (returns best solution given restrictions M)
-        du = self.optimize(f,self.iH)
+        du = self.optimize(self.iH)
 
         # New control output (u is bound by control horizon, to avoid memory issues)
         self.u = np.roll(self.u,-1)

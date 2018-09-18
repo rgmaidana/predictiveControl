@@ -10,7 +10,6 @@ class RCFilter:
 
         # Continuous-time state-space
         self.A = np.array([[-1/(self.R*self.Cap)]], dtype=np.float)
-        self.dA = np.array([[0]], dtype=np.float)
         self.B = np.array([[1]], dtype=np.float)
         self.C = np.array([[1/(self.R*self.Cap)]], dtype=np.float)
 
@@ -52,9 +51,9 @@ if __name__ == "__main__":
     filt = RCFilter(T=0.01)
     
     # Instantiate MPC with RC filter model
-    mpc = MPC(filt.A, filt.dA, filt.B, filt.C, T=filt.T)
+    mpc = MPC(filt.A, filt.B, filt.C, T=filt.T)
     mpc.set_predict_horizon(15)         # Set prediction horizon
-    mpc.set_control_horizon(4)          # Set control horizon
+    mpc.set_control_horizon(2)          # Set control horizon
     mpc.dumin, mpc.dumax = -10, 10      # Set restrictions to actuator variation and amplitude
     mpc.umin, mpc.umax = 0, 100         
     mpc.set_reference(10)               # Set reference (Volts)

@@ -17,7 +17,6 @@ class DCMotor:
         # Motor continuous-time state-space
         self.A = np.array([[-self.b/self.J,      self.kt*self.If/self.J],
                            [-self.kw*self.If/self.La, -self.Ra/self.La]])
-        self.dA = np.array([[0, 1], [1, 0]]).dot(0.5)  # Derivative of A
         self.B = np.array([0, 1/self.La]).reshape((2,1))
         self.C = np.array([[1, 0]], dtype=np.float)
         self.dist = np.array([[-1/self.J, 0]]).T         # Input Disturbance
@@ -61,7 +60,7 @@ if __name__ == '__main__':
     motor = DCMotor(T=0.05)
     
     # Instantiate MPC with DC motor model
-    mpc = MPC(motor.A, motor.dA, motor.B, motor.C, T=motor.T)
+    mpc = MPC(motor.A, motor.B, motor.C, T=motor.T)
     mpc.set_predict_horizon(15)         # Set prediction horizon
     mpc.set_control_horizon(4)          # Set control horizon
     mpc.dumin, mpc.dumax = -0.5, 1.5    # Set restrictions to actuator variation and amplitude

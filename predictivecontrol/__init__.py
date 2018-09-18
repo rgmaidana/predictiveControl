@@ -1,12 +1,11 @@
 import numpy as np
-from scipy.linalg import block_diag
+from scipy.linalg import block_diag, expm
 
 ''' Model Predictive Control '''
 class MPC:
-    def __init__(self, A, dA, B, C, D=0, dist=0, Np=10, Nc=4, umax=1, umin=0, dumax=1, dumin=0, T=0.001, dt=1e-3, **kwargs):
+    def __init__(self, A, B, C, D=0, dist=0, Np=10, Nc=4, umax=1, umin=0, dumax=1, dumin=0, T=0.001, dt=1e-3, **kwargs):
         #### Continuous Dynamic System State-Space ####
         self.A = A
-        self.dA = dA
         self.B = B
         self.C = C
         self.D = D
@@ -14,9 +13,9 @@ class MPC:
         self.T = T
 
         #### Discrete System State-Space model ####
-        A_d = (np.eye(self.A.shape[0]) + (self.A+self.dA).dot(self.T))
-        B_d = self.B.dot(self.T)
-
+        A_d = expm(self.A.dot(self.T))
+        B_d = np.linalg.inv(self.A).dot((A_d - np.eye(self.A.shape[0]))).dot(self.B)
+        
         #### Discrete Augmented State-Space ####
         self.Aa = np.r_[np.c_[A_d, np.zeros((A_d.shape[0],1))], np.c_[self.C.dot(A_d).reshape((1,A_d.shape[1])), np.ones((1,1))]]
         self.Ba = np.r_[B_d, self.C.dot(B_d).reshape((1,1))]
@@ -70,8 +69,8 @@ class MPC:
     def get_control_horizon(self):
         return self.__Nc
 
-    def set_model(self, A, dA, B, C, D=0, dist=0):
-        self.__init__(A,dA,B,C,D,dist)
+    def set_model(self, A, B, C, D=0, dist=0):
+        self.__init__(A,B,C,D,dist)
 
     def set_predict_horizon(self, Np):
         self.__Np = Np

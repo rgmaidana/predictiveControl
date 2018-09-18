@@ -65,7 +65,7 @@ The result you will see is (for DC motor example):
 
 ## To-Do
 
-* Test MPC with a different model
+* ~~Test MPC with a different model~~ [DONE]
 * Test E-MPC with DC Motor and another model
 * Test both controllers with MIMO models
 * Account for external disturbances in the controllers

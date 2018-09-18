@@ -16,9 +16,7 @@ Install the package directly from PyPI:
 
 Or clone the repository and install locally:
 
-```
-pip -e <path_to_repository>
-```
+```pip -e <path_to_repository>```
 
 ## Usage
 

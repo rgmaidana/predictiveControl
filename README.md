@@ -22,7 +22,7 @@ pip -e <path_to_repository>
 
 ## Usage
 
-Simply import the class of controller wanted and instantiate it with valid state-space model matrices (A,B and C, D and external disturbances are optional).
+Simply import the class of controller wanted and instantiate it with valid state-space model matrices (A, dA, B and C, D and external disturbances are optional).
 Then use the ```run()``` method to update the controller output based on the last sensed or estimated states.
 
 You may also set the prediction and control horizons, the actuation limits and the reference for your control system.
@@ -32,7 +32,7 @@ from DCMotor import Motor
 from predictivecontrol import MPC
 
 dcmotor = Motor()
-mpc = MPC(dcmotor)
+mpc = MPC(dcmotor.A, dcmotor.dA, dcmotor.B, dcmotor.C)
 
 mpc.set_predict_horizon(10)
 mpc.set_control_horizon(4)

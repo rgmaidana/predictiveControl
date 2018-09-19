@@ -50,10 +50,11 @@ class MPC:
         return F
                 
     def get_P(self):
-        P = np.c_[self.Ca.dot(self.Ba), np.zeros((self.Ca.shape[0],self.__Nc-1), dtype=np.float)]
+        P = np.zeros((self.Ca.shape[0], self.__Nc*self.Ca.shape[0]))
+        P[:,0:self.Ca.shape[0]] = self.Ca.dot(self.Ba)
         for i in range(1,self.__Np):
             row = np.roll(P[-self.Ca.shape[0]:,:],1)
-            row[0,0:self.Ca.shape[0]] = self.Ca.dot(np.linalg.matrix_power(self.Aa,i)).dot(self.Ba)
+            row[:,0:self.Ca.shape[0]] = (self.Ca.dot(np.linalg.matrix_power(self.Aa,i))).dot(self.Ba)
             P = np.r_[P, row]
         return P
 

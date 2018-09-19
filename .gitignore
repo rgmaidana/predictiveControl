@@ -3,5 +3,5 @@ dist
 predictivecontrol/__init__.pyc
 frames/*
 compr_mpc.py
-encoder.py
+encoder.py*
 libs/*

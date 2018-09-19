@@ -3,7 +3,7 @@ from scipy.linalg import block_diag, expm
 
 ''' Model Predictive Control '''
 class MPC:
-    def __init__(self, A, B, C, D=0, dist=0, Np=10, Nc=4, umax=1, umin=0, dumax=1, dumin=0, T=0.001, dt=1e-3, **kwargs):
+    def __init__(self, A, B, C, D=0, dist=0, Np=10, Nc=4, umax=1, umin=0, dumax=1, dumin=0, T=0.001, discretize=True, **kwargs):
         #### Continuous Dynamic System State-Space ####
         self.A = A
         self.B = B
@@ -13,13 +13,14 @@ class MPC:
         self.T = T
 
         #### Discrete System State-Space model ####
-        A_d = expm(self.A.dot(self.T))
-        B_d = np.linalg.inv(self.A).dot((A_d - np.eye(self.A.shape[0]))).dot(self.B)
+        if discretize:
+            self.A = expm(self.A.dot(self.T))
+            self.B = np.linalg.inv(A).dot((self.A - np.eye(self.A.shape[0]))).dot(self.B)
         
         #### Discrete Augmented State-Space ####
-        self.Aa = np.r_[np.c_[A_d, np.zeros((A_d.shape[0],1))], np.c_[self.C.dot(A_d).reshape((1,A_d.shape[1])), np.ones((1,1))]]
-        self.Ba = np.r_[B_d, self.C.dot(B_d).reshape((1,1))]
-        self.Ca = np.c_[np.zeros((1,self.Aa.shape[0]-1)), np.array([[1]])]
+        self.Aa = np.r_[np.c_[self.A, np.zeros((self.A.shape[0],self.C.shape[0]))], np.c_[self.C.dot(self.A), np.eye(self.C.shape[0])]]
+        self.Ba = np.r_[self.B, self.C.dot(self.B)]
+        self.Ca = np.c_[self.C, np.eye(self.C.shape[0])]
         
         #### Model Predictive Controller ####
         self.__Np = Np         # Prediction horizon

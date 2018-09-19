@@ -1,7 +1,7 @@
 predictivecontrol.egg-info
 dist
 predictivecontrol/__init__.pyc
-frames/*
-compr_mpc.py
-encoder.py*
-libs/*
+examples/frames/*
+examples/compr_mpc.py
+examples/encoder.py*
+examples/libs/*

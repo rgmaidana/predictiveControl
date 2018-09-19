@@ -44,23 +44,16 @@ class MPC:
         self.t = np.array([0,0], dtype=np.float)  # Time vector
 
     def get_F(self):
-        # Calculate F
-        # Calculate the first loop iteration here because we can't concatenate an empty array in python
-        aux = self.Ca
-        F = self.Aa.dot(np.eye(self.Aa.shape[0]))       
-        AA = block_diag(self.Aa, self.Aa)
-        for _ in range(1,self.__Np):
-            F = AA.dot(np.r_[np.eye(self.Aa.shape[0]), F])
-            AA = block_diag(self.Aa, AA)
-            aux = block_diag(self.Ca, aux)
-        F = aux.dot(F)
-        return F
-    
-    def get_P(self):
-        P = np.c_[self.Ca.dot(self.Ba), np.zeros((1,self.__Nc-1), dtype=np.float)]
+        F = self.Ca.dot(self.Aa)
         for i in range(1,self.__Np):
-            row = np.roll(P[-1,:],1).reshape((1,P.shape[1]))
-            row[0,0] = self.Ca.dot(np.linalg.matrix_power(self.Aa,i)).dot(self.Ba)
+            F = np.vstack((F, self.Ca.dot(np.linalg.matrix_power(self.Aa,i+1))))
+        return F
+                
+    def get_P(self):
+        P = np.c_[self.Ca.dot(self.Ba), np.zeros((self.Ca.shape[0],self.__Nc-1), dtype=np.float)]
+        for i in range(1,self.__Np):
+            row = np.roll(P[-self.Ca.shape[0]:,:],1)
+            row[0,0:self.Ca.shape[0]] = self.Ca.dot(np.linalg.matrix_power(self.Aa,i)).dot(self.Ba)
             P = np.r_[P, row]
         return P
 

@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='predictivecontrol',
-      version='0.7',
+      version='0.8',
       description='Python package which implements Predictive Control techniques (e.g., MPC, E-MPC)',
       url='https://github.com/rgmaidana/predictiveControl',
       author='Renan Maidana',
@@ -10,7 +10,8 @@ setup(name='predictivecontrol',
       packages=['predictivecontrol'],
       install_requires=[
           'numpy',
-          'scipy'
+          'scipy',
+          'cvxopt'
       ],
       zip_safe=False
     )

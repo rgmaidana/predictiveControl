@@ -65,9 +65,11 @@ The result you will see is (for DC motor example):
 ## To-Do
 
 * ~~Test MPC with a different model~~ [DONE]
-* Test E-MPC with DC Motor and another model
-* Test both controllers with MIMO models
-* Account for external disturbances in the controllers
+* ~~Extend MPC to support MIMO systems~~ [DONE]
+* ~~Test MPC with MIMO systems~~ [DONE]
+* Test E-MPC SISO and MIMO
+* Account for external disturbances in MPC SISO and MIMO
+* Account for external disturbances in E-MPC SISO and MIMO
 
 ## Credits
 Code inspired by [Prof. Dr. Aurelio Salton](https://scholar.google.com/citations?user=uyWSHmAAAAAJ&hl=en)'s MPC matlab example.

@@ -1,5 +1,9 @@
 import numpy as np
 from scipy.linalg import block_diag, expm
+from cvxopt import matrix as cvxmtx
+from cvxopt import solvers
+
+solvers.options['show_progress'] = False
 
 ''' Model Predictive Control '''
 class MPC:
@@ -116,58 +120,6 @@ class MPC:
         self.H = self.get_H()
         self.iH = np.linalg.inv(self.H)
 
-    def optimize(self, iH):
-        # QPhild, from Liuping Wang's book
-        #
-        #  Minimizes the quadratic cost function
-        #
-        #       J = 0.5 x'Hx + x'f
-        #       subject to:  M x < b
-        #
-        #  where iH = inv(H)
-        
-        n1 = self.M.shape[0]
-
-        xa = np.array([], dtype=np.float)
-        for i in range(self.x.shape[0]):
-            xa = np.r_[xa, self.x[i,-1]-self.x[i,-2]]
-        xa = np.r_[xa, self.x[0,-1]]
-        f = self.F.dot(xa)
-        f = f.reshape((f.shape[0],1))
-        f = -(self.__Rs-f).T.dot(self.P).T
-
-        # Unconstrained optimal solution is -H/f
-        eta = -iH.dot(f)
-
-        # Test if this solution satisfies all restrictions M
-        kk = 0
-        for i in range(n1):
-            if (self.M[i,:].dot(eta) > self.gamma[i] ):
-                kk += 1
-        if (kk == 0):
-            return eta  # If all restrictions are satisfied, we are done!
-        
-        # If not, we proceed with Hildreth's algorithm
-        P = self.M.dot(iH.dot(self.M.T))
-        d = (self.M.dot(iH.dot(f)) + self.gamma)
-        n = d.shape[0]
-        x_ini = np.zeros(d.shape)
-        lamb = np.copy(x_ini)
-        for _ in range(38):
-            lamb_p = np.copy(lamb)
-            for i in range(n):
-                w = P[i,:].dot(lamb) - P[i,i]*lamb[i,0]
-                w += d[i,0]
-                la = -w/P[i,i]
-                lamb[i,0] = max(0,la)
-            
-            al = (lamb-lamb_p).T.dot(lamb-lamb_p)
-            if (al < 10e-8):
-                break
-            
-        eta -= iH.dot(self.M.T).dot(lamb)
-        return eta
-
     def run(self):
         # Redefine restrictions based on last input
         self.gamma = np.ones((self.B.shape[1],self.__Nc))*self.dumax.reshape((max(self.dumax.shape),1))
@@ -177,7 +129,17 @@ class MPC:
         self.gamma = self.gamma.T
 
         # Quadratic optimization (returns best solution given restrictions M)
-        du = self.optimize(self.iH)
+        # New version uses Convex Optimization (cvxopt) python package, as it provides optimized quadratic optimization
+        xa = np.array([], dtype=np.float)
+        for i in range(self.x.shape[0]):
+            xa = np.r_[xa, self.x[i,-1]-self.x[i,-2]]
+        xa = np.r_[xa, self.x[0,-1]]
+        f = self.F.dot(xa)
+        f = f.reshape((f.shape[0],1))
+        f = -(self.__Rs-f).T.dot(self.P).T
+
+        qp_solver = solvers.qp(cvxmtx(self.H), cvxmtx(f), cvxmtx(self.M), cvxmtx(self.gamma))
+        du = np.matrix(qp_solver['x'])
 
         # New control output (u is bound by control horizon, to avoid memory issues)
         self.u = np.roll(self.u[-self.u.shape[0]:,:],-1)

@@ -38,15 +38,29 @@ class MPC:
         self.iH = np.linalg.inv(self.H)
         
         #### Optimization Restrictions ####
-        self.M = np.tril(np.ones((self.__Nc, self.__Nc), dtype=np.float))
-        self.M = np.r_[np.r_[np.r_[np.eye(self.__Nc), self.M], -np.eye(self.__Nc)], -np.eye(self.M.shape[0])*self.M]
+        self.M = self.get_M()
+
         # Saturation limits must be numpy arrays!
         self.umax, self.dumax = umax, dumax
         self.umin, self.dumin = umin, dumin
-        self.gamma = np.ones((1,self.__Nc*4), dtype=np.float).T
 
         #### Other parameters ####
         self.t = np.array([0,0], dtype=np.float)  # Time vector
+
+    def get_M(self):
+        Ma = np.eye(self.__Nc,dtype=np.float)
+        Ma = np.r_[Ma, np.tril(np.ones((self.__Nc,self.__Nc), dtype=np.float))]
+        Ma = np.r_[Ma, -np.eye(self.__Nc)]
+        Ma = np.r_[Ma, -np.tril(np.ones((self.__Nc,self.__Nc), dtype=np.float))]
+
+        # Ma = np.tril(np.ones((self.__Nc, self.__Nc), dtype=np.float))
+        # Ma = np.r_[np.r_[np.r_[np.eye(self.__Nc), Ma], -np.eye(self.__Nc)], -np.eye(Ma.shape[0])*Ma]
+
+        M = np.empty((Ma.shape[0],0), dtype=np.float)
+        M = np.c_[M, Ma]
+        for _ in range(1,self.u.shape[0]):
+            M = np.c_[M, Ma]
+        return M
 
     def get_F(self):
         F = self.Ca.dot(self.Aa)
@@ -105,11 +119,9 @@ class MPC:
         self.P = self.get_P()
         self.H = self.get_H()
         self.iH = np.linalg.inv(self.H)
-        self.M = np.tril(np.ones((self.__Nc, self.__Nc), dtype=np.float))
-        self.M = np.r_[np.r_[np.r_[np.eye(self.__Nc), self.M], -np.eye(self.__Nc)], -np.eye(self.M.shape[0])*self.M]
-        self.gamma = np.ones((1,self.__Nc*4), dtype=np.float).T
         self.u = np.zeros((self.B.shape[1],self.__Nc), dtype=np.float)
-
+        self.M = self.get_M()
+    
     def get_reference(self):
         return self.__Rs[0,:]
 
@@ -122,25 +134,50 @@ class MPC:
 
     def run(self):
         # Redefine restrictions based on last input
-        self.gamma = np.ones((self.B.shape[1],self.__Nc))*self.dumax.reshape((max(self.dumax.shape),1))
-        self.gamma = np.c_[self.gamma, np.ones((self.B.shape[1],self.__Nc))*(self.umax.reshape((max(self.umax.shape),1))-self.u[:,-1].reshape((self.u.shape[0],1)))]
-        self.gamma = np.c_[self.gamma, np.ones((self.B.shape[1],self.__Nc))*(-self.dumin.reshape((max(self.dumax.shape),1)))]
-        self.gamma = np.c_[self.gamma, np.ones((self.B.shape[1],self.__Nc))*(-self.umin.reshape((max(self.umax.shape),1))+self.u[:,-1].reshape((self.u.shape[0],1)))]
-        self.gamma = self.gamma.T
+        #self.gamma = np.empty((self.M.shape[0],0), dtype=np.float)
+        self.gamma = self.dumax[0]*np.ones((self.__Nc,1), dtype=np.float)
+        self.gamma = np.r_[self.gamma, (self.umax[0]-self.u[0,-1])*np.ones((self.__Nc,1))]
+        self.gamma = np.r_[self.gamma, -self.dumin[0]*np.ones((self.__Nc,1), dtype=np.float)]
+        self.gamma = np.r_[self.gamma, (-self.umin[0]+self.u[0,-1])*np.ones((self.__Nc,1))]
+        for i in range(1,self.u.shape[0]):
+            col = self.dumax[0]*np.ones((self.__Nc,1), dtype=np.float)
+            col = np.r_[col, (self.umax[i]-self.u[i,-1])*np.ones((self.__Nc,1))]
+            col = np.r_[col, -self.dumin[i]*np.ones((self.__Nc,1), dtype=np.float)]
+            col = np.r_[col, (-self.umin[i]+self.u[i,-1])*np.ones((self.__Nc,1))]
+            self.gamma = np.c_[self.gamma, col]
+
+
+        # self.gamma = np.ones((self.B.shape[1],self.__Nc))*self.dumax.reshape((max(self.dumax.shape),1))
+        # self.gamma = np.c_[self.gamma, np.ones((self.B.shape[1],self.__Nc))*(self.umax.reshape((max(self.umax.shape),1))-self.u[:,-1].reshape((self.u.shape[0],1)))]
+        # self.gamma = np.c_[self.gamma, np.ones((self.B.shape[1],self.__Nc))*(-self.dumin.reshape((max(self.dumax.shape),1)))]
+        # self.gamma = np.c_[self.gamma, np.ones((self.B.shape[1],self.__Nc))*(-self.umin.reshape((max(self.umax.shape),1))+self.u[:,-1].reshape((self.u.shape[0],1)))]
+        # self.gamma = self.gamma.T
 
         # Quadratic optimization (returns best solution given restrictions M)
         # New version uses Convex Optimization (cvxopt) python package, as it provides optimized quadratic optimization
         xa = np.array([], dtype=np.float)
         for i in range(self.x.shape[0]):
             xa = np.r_[xa, self.x[i,-1]-self.x[i,-2]]
-        xa = np.r_[xa, self.x[0,-1]]
-        f = self.F.dot(xa)
-        f = f.reshape((f.shape[0],1))
-        f = -(self.__Rs-f).T.dot(self.P).T
+        for i in range(self.u.shape[0]):
+            xa = np.r_[xa, self.x[i,-1]]
+        xf = np.array([])
+        xf = np.r_[xf, xa]
+        for i in range(1,self.u.shape[0]):
+            xf = np.c_[xf, xa]        # Add identical columns for other entries?
 
-        qp_solver = solvers.qp(cvxmtx(self.H), cvxmtx(f), cvxmtx(self.M), cvxmtx(self.gamma))
-        du = np.matrix(qp_solver['x'])
+        xf = xf.reshape((xf.shape[0],self.u.shape[0]))
+        f = ((-(self.__Rs-self.F.dot(xf)).T).dot(self.P)).T
 
+        lb, ub = 0, self.H.shape[0]/self.u.shape[0]
+        minH = self.H[lb:ub,lb:ub]
+        qp_solver = solvers.qp(cvxmtx(minH), cvxmtx(f[:,0]), cvxmtx(self.M), cvxmtx(self.gamma[:,0]))
+        du = np.array(qp_solver['x'])
+        for i in range(1,self.u.shape[0]):
+            lb, ub = i*(self.H.shape[0]/self.u.shape[0]), (i+1)*(self.H.shape[0]/self.u.shape[0])
+            minH = self.H[lb:ub,lb:ub]
+            qp_solver = solvers.qp(cvxmtx(minH), cvxmtx(f[:,i]), cvxmtx(self.M), cvxmtx(self.gamma[:,i]))
+            du = np.c_[du, np.array(qp_solver['x'])]
+            
         # New control output (u is bound by control horizon, to avoid memory issues)
         self.u = np.roll(self.u[-self.u.shape[0]:,:],-1)
         self.u[:,-1] = du[0,:] + self.u[:,-2]

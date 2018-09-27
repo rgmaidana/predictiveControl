@@ -92,7 +92,6 @@ class MPC:
         self.iH = np.linalg.inv(self.H)
         ref = self.__Rs[0,:]
         self.__Rs = ref[0]*np.ones((self.F.shape[0],1))
-        # Every input has its own reference?
         for i in range(1,self.B.shape[1]):
             self.__Rs = np.c_[self.__Rs, ref[i]*np.ones((self.F.shape[0]))]
         self.x = np.zeros((self.A.shape[0],self.__Np), dtype=np.float)

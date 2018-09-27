@@ -48,10 +48,10 @@ if __name__ == '__main__':
         sys.exit(0)
 
 
-    # Instantiate DC Motor model (sampling time of 0.05 seconds)
+    # Instantiate model
     body = RotBody()
     
-    # Instantiate MPC with DC motor model
+    # Instantiate MPC with model
     mpc = MPC(body.A, body.B, body.C, T=0.01, discretize=True)
     mpc.set_predict_horizon(50)         # Set prediction horizon
     mpc.set_control_horizon(4)          # Set control horizon
@@ -93,7 +93,6 @@ if __name__ == '__main__':
     print "Reference: %.2f rad/s" % mpc.get_reference()[0]
     print "Final states at time %.2f seconds:" % mpc.t[-1]
     print "\tAngular velocity: \t%.2f rad/s" % mpc.x[0,-1]
-    print "\tAngular acceleration: \t%.2f rad/s^2" % mpc.x[1,-1]
 
     # Plot results
     try:

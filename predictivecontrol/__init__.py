@@ -4,7 +4,7 @@ from scipy.linalg import block_diag, expm
 ''' Model Predictive Control '''
 class MPC:
     def __init__(self, A, B, C, D=0, dist=0, Np=10, Nc=4, umax=1, umin=0, dumax=1, dumin=0, T=0.001, discretize=True, **kwargs):
-        #### Continuous Dynamic System State-Space ####
+        #### System State-Space ####
         self.A = A
         self.B = B
         self.C = C
@@ -12,12 +12,12 @@ class MPC:
         self.dist = dist
         self.T = T
 
-        #### Discrete System State-Space model ####
+        #### Discretization ####
         if discretize:
             self.A = expm(self.A.dot(self.T))
             self.B = np.linalg.inv(A).dot((self.A - np.eye(self.A.shape[0]))).dot(self.B)
         
-        #### Discrete Augmented State-Space ####
+        #### Augmented State-Space ####
         self.Aa = np.r_[np.c_[self.A, np.zeros((self.A.shape[0],self.C.shape[0]))], np.c_[self.C.dot(self.A), np.eye(self.C.shape[0])]]
         self.Ba = np.r_[self.B, self.C.dot(self.B)]
         self.Ca = np.c_[self.C, np.eye(self.C.shape[0])]
@@ -27,15 +27,16 @@ class MPC:
         self.__Nc = Nc         # Control Horizon
         self.F = self.get_F()
         self.P = self.get_P()
-        self.u = np.zeros((self.__Nc), dtype=np.float)
+        self.u = np.zeros((self.B.shape[1],self.__Nc), dtype=np.float)
         self.x = np.zeros((self.A.shape[0],self.__Np), dtype=np.float)
-        self.__Rs = np.zeros((self.F.shape[0],1))                       # Setpoint (reference, init as 0)
-        self.H = self.P.T.dot(self.P) + self.__Rs[0]*np.eye(self.P.T.dot(self.P).shape[0])
+        self.__Rs = np.zeros((self.F.shape[0],self.B.shape[1]))                       # Setpoint (reference, init as 0)
+        self.H = self.get_H()        
         self.iH = np.linalg.inv(self.H)
         
         #### Optimization Restrictions ####
         self.M = np.tril(np.ones((self.__Nc, self.__Nc), dtype=np.float))
         self.M = np.r_[np.r_[np.r_[np.eye(self.__Nc), self.M], -np.eye(self.__Nc)], -np.eye(self.M.shape[0])*self.M]
+        # Saturation limits must be numpy arrays!
         self.umax, self.dumax = umax, dumax
         self.umin, self.dumin = umin, dumin
         self.gamma = np.ones((1,self.__Nc*4), dtype=np.float).T
@@ -58,6 +59,14 @@ class MPC:
             P = np.r_[P, row]
         return P
 
+    # Is this correct? For every input, make a diagonal augmented matrix
+    def get_H(self):
+        H = self.P.T.dot(self.P) + self.__Rs[0,0]*np.eye(self.P.T.dot(self.P).shape[0])
+        for i in range(1,self.B.shape[1]):
+            mtx = self.P.T.dot(self.P) + self.__Rs[0,i]*np.eye(self.P.T.dot(self.P).shape[0])
+            H = block_diag(H, mtx)
+        return H
+
     def get_predict_horizon(self):
         return self.__Np
     
@@ -65,33 +74,47 @@ class MPC:
         return self.__Nc
 
     def set_model(self, A, B, C, D=0, dist=0):
+        ref = self.get_reference()
+        Np = self.get_predict_horizon()
+        Nc = self.get_control_horizon()
+
+        # Reinitialize
         self.__init__(A,B,C,D,dist)
+        self.set_predict_horizon(Np)
+        self.set_control_horizon(Nc)
+        self.set_reference(ref)
 
     def set_predict_horizon(self, Np):
         self.__Np = Np
         self.F = self.get_F()
         self.P = self.get_P()
-        self.H = self.P.T.dot(self.P) + self.__Rs[0]*np.eye(self.P.T.dot(self.P).shape[0])
+        self.H = self.get_H()
         self.iH = np.linalg.inv(self.H)
-        self.__Rs = self.__Rs[0]*np.ones((self.F.shape[0],1))
+        ref = self.__Rs[0,:]
+        self.__Rs = ref[0]*np.ones((self.F.shape[0],1))
+        # Every input has its own reference?
+        for i in range(1,self.B.shape[1]):
+            self.__Rs = np.c_[self.__Rs, ref[i]*np.ones((self.F.shape[0]))]
         self.x = np.zeros((self.A.shape[0],self.__Np), dtype=np.float)
     
     def set_control_horizon(self, Nc):
         self.__Nc = Nc
         self.P = self.get_P()
-        self.H = self.P.T.dot(self.P) + self.__Rs[0]*np.eye(self.P.T.dot(self.P).shape[0])
+        self.H = self.get_H()
         self.iH = np.linalg.inv(self.H)
         self.M = np.tril(np.ones((self.__Nc, self.__Nc), dtype=np.float))
         self.M = np.r_[np.r_[np.r_[np.eye(self.__Nc), self.M], -np.eye(self.__Nc)], -np.eye(self.M.shape[0])*self.M]
         self.gamma = np.ones((1,self.__Nc*4), dtype=np.float).T
-        self.u = np.zeros((self.__Nc), dtype=np.float)
+        self.u = np.zeros((self.B.shape[1],self.__Nc), dtype=np.float)
 
     def get_reference(self):
-        return self.__Rs[0]
+        return self.__Rs[0,:]
 
     def set_reference(self, ref):
-        self.__Rs += ref*np.ones(self.__Rs.shape)
-        self.H = self.P.T.dot(self.P) + self.__Rs[0]*np.eye(self.P.T.dot(self.P).shape[0])
+        # Reference is a list
+        for i in range(self.B.shape[1]):
+            self.__Rs[:,i] = (ref[i]*np.ones((self.__Rs.shape[0],1)))[:,0]
+        self.H = self.get_H()
         self.iH = np.linalg.inv(self.H)
 
     def optimize(self, iH):
@@ -148,18 +171,18 @@ class MPC:
 
     def run(self):
         # Redefine restrictions based on last input
-        self.gamma = np.ones((1,self.__Nc))*self.dumax
-        self.gamma = np.c_[self.gamma, np.ones((1,self.__Nc))*(self.umax-self.u[-1])]
-        self.gamma = np.c_[self.gamma, np.ones((1,self.__Nc))*(-self.dumin)]
-        self.gamma = np.c_[self.gamma, np.ones((1,self.__Nc))*(-self.umin+self.u[-1])]
+        self.gamma = np.ones((self.B.shape[1],self.__Nc))*self.dumax.reshape((max(self.dumax.shape),1))
+        self.gamma = np.c_[self.gamma, np.ones((self.B.shape[1],self.__Nc))*(self.umax.reshape((max(self.umax.shape),1))-self.u[:,-1].reshape((self.u.shape[0],1)))]
+        self.gamma = np.c_[self.gamma, np.ones((self.B.shape[1],self.__Nc))*(-self.dumin.reshape((max(self.dumax.shape),1)))]
+        self.gamma = np.c_[self.gamma, np.ones((self.B.shape[1],self.__Nc))*(-self.umin.reshape((max(self.umax.shape),1))+self.u[:,-1].reshape((self.u.shape[0],1)))]
         self.gamma = self.gamma.T
 
         # Quadratic optimization (returns best solution given restrictions M)
         du = self.optimize(self.iH)
 
         # New control output (u is bound by control horizon, to avoid memory issues)
-        self.u = np.roll(self.u,-1)
-        self.u[-1] = du[0] + self.u[-2]
+        self.u = np.roll(self.u[-self.u.shape[0]:,:],-1)
+        self.u[:,-1] = du[0,:] + self.u[:,-2]
 
 ''' Economic Model Predictive Control
     Inherits from MPC class, with the only modification being the minimization function ''' 

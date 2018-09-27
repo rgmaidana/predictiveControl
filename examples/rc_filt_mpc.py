@@ -54,9 +54,9 @@ if __name__ == "__main__":
     mpc = MPC(filt.A, filt.B, filt.C, T=filt.T)
     mpc.set_predict_horizon(15)         # Set prediction horizon
     mpc.set_control_horizon(2)          # Set control horizon
-    mpc.dumin, mpc.dumax = -10, 10      # Set restrictions to actuator variation and amplitude
-    mpc.umin, mpc.umax = 0, 100         
-    mpc.set_reference(10)               # Set reference (Volts)
+    mpc.dumin, mpc.dumax = np.array([-10]), np.array([10])      # Set restrictions to actuator variation and amplitude
+    mpc.umin, mpc.umax = np.array([0]), np.array([100])         
+    mpc.set_reference([10])               # Set reference (Volts)
 
     # Setup Nonstiff Ordinary Diff. Equation (ODE) solver (equivalent to matlab's ODE45)
     dt = 1e-3       # ODE derivation time
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
         # Solve ODE (simulate motor based on model)
         solv.set_initial_value(mpc.x[:,-1]) # Current initial value is last state
-        solv.set_f_params(mpc.u[-1])        # Apply control input into system
+        solv.set_f_params(mpc.u[0,-1])        # Apply control input into system
         while solv.successful() and solv.t < mpc.T:
             solv.integrate(solv.t+dt)
         

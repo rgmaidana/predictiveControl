@@ -7,6 +7,7 @@ Currently it supports only Model-Predictive Control (MPC), although a class for 
 
 * [numpy](https://www.numpy.org/)
 * [scipy](https://www.scipy.org/)
+* [cvxopt](https://cvxopt.org/)
 
 ## Installation
 

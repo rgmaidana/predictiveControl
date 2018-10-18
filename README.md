@@ -21,10 +21,13 @@ Or clone the repository and install locally:
 
 ## Usage
 
-Simply import the class of controller wanted and instantiate it with valid state-space model matrices (A, dA, B and C, D and external disturbances are optional).
+Simply import the class of controller wanted and instantiate it with valid state-space model matrices (i.e., A, B and C).
+Optional arguments include sampling time (T), prediction (Np) and control horizons (Nc), actuation limits (umin, umax, dumin, dumax), and whether the provided state-state model should be discretized (discretize).
+
+You may also posteriorly set the prediction and control horizons, the actuation limits, the references and output weights for your control system.
+
 Then use the ```run()``` method to update the controller output based on the last sensed or estimated states.
 
-You may also set the prediction and control horizons, the actuation limits and the reference for your control system.
 
 ```
 import numpy as np

@@ -61,7 +61,8 @@ if __name__ == '__main__':
     mpc.dumin, mpc.dumax = np.array([-10,-10,-10]), np.array([10,10,10])    # Set restrictions to torque
     mpc.umin, mpc.umax = np.array([-100,-100,-100]), np.array([100,100,100])          
     mpc.set_reference(np.array([5,15,25]))               # Set reference (rad/s)
-    
+    mpc.set_output_weights(np.array([1,1,1]))            # Set output weights
+
     # Setup Nonstiff Ordinary Diff. Equation (ODE) solver (equivalent to matlab's ODE45)
     dt = 1e-3       # ODE derivation time
     solv = ode(body.output).set_integrator('dopri5', method='rtol')   

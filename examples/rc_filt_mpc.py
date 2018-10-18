@@ -60,6 +60,7 @@ if __name__ == "__main__":
     mpc.dumin, mpc.dumax = np.array([-10]), np.array([10])      # Set restrictions to actuator variation and amplitude
     mpc.umin, mpc.umax = np.array([0]), np.array([100])         
     mpc.set_reference(np.array([10]))               # Set reference (Volts)
+    mpc.set_output_weights(np.array([1]))           # Set output weight
 
     # Setup Nonstiff Ordinary Diff. Equation (ODE) solver (equivalent to matlab's ODE45)
     dt = 1e-3       # ODE derivation time

@@ -131,6 +131,7 @@ if __name__ == '__main__':
             plt.plot(mpc.t, x[k,:], lw=2.0)
         plt.xlabel('Time (s)')
         plt.ylabel('x')
+        plt.title('States')
         legend = []
         for k in range(0,x.shape[0]):
             legend.append('x%d' % (k+1))
@@ -142,7 +143,8 @@ if __name__ == '__main__':
         for k in range(u.shape[0]):
             plt.plot(mpc.t, u[k,:], lw=2.0)
         plt.xlabel('Time (s)')
-        plt.ylabel('x')
+        plt.ylabel('Torque (N.m)')
+        plt.title('Inputs')
         legend = [0 for _ in range(u.shape[0]*2)]
         for k in range(u.shape[0]):
             legend[k] = 'u%d' % (k+1)
@@ -155,7 +157,8 @@ if __name__ == '__main__':
             ax = plt.plot(mpc.t, np.ones(mpc.t.shape)*mpc.get_reference()[k], '--', lw=2.0)
             plt.plot(mpc.t, y[k,:], color=ax[0].get_color(), lw=2.0)
         plt.xlabel('Time (s)')
-        plt.ylabel('x')
+        plt.ylabel('Angular velocity (rad/s)')
+        plt.title('Outputs')
         legend = []
         for k in range(0,y.shape[0]):
             legend.append('Reference %d' % (k+1))

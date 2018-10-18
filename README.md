@@ -72,6 +72,7 @@ The result you will see is (for DC motor example):
 * Account for external disturbances in E-MPC SISO and MIMO
 
 ## Credits
+
 Code inspired by [Prof. Dr. Aurelio Salton](https://scholar.google.com/citations?user=uyWSHmAAAAAJ&hl=en)'s MPC matlab example.
 
 ## Collaborators

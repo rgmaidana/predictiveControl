@@ -1,7 +1,7 @@
 # Predictive Control in Python
 
 This package implements Predictive Control techniques in Python2.7. 
-Currently it supports only Model-Predictive Control (MPC), although a class for Economic MPC has been added (not tested!).
+Currently it supports only Model-Predictive Control (MPC), for SISO and MIMO systems, although a class for Economic MPC has been added (not tested!).
 
 ## Dependencies
 
@@ -27,28 +27,37 @@ Then use the ```run()``` method to update the controller output based on the las
 You may also set the prediction and control horizons, the actuation limits and the reference for your control system.
 
 ```
-from DCMotor import Motor
+import numpy as np
 from predictivecontrol import MPC
 
-dcmotor = Motor()
-mpc = MPC(dcmotor.A, dcmotor.dA, dcmotor.B, dcmotor.C)
+# Define your state-space matrices, i.e. A, B, C
 
+# Instantiate controller
+mpc = MPC(A,B,C)
+
+# Set prediction and control horizons
 mpc.set_predict_horizon(10)
 mpc.set_control_horizon(4)
-mpc.umin, mpc.umax = 0, 100
-mpc.dumin, mpc.dumax = -0.5, 0.5
 
-mpc.set_reference(10)
+# Set control restrictions (currently variation and amplitude)
+mpc.umin, mpc.umax = np.array([0]), np.array([100])     # Considering a SISO system
+mpc.dumin, mpc.dumax = np.array([-0.5]), np.array([0.5])
+
+# Set setpoints and output weights
+mpc.set_reference(np.array([10]))
+mpc.set_output_weights(np.array([1]))
 
 mpc.run()
 ```
 
 ## Examples
 
-This package currently contains 2 [examples](https://github.com/rgmaidana/predictiveControl/tree/master/examples):
+This package currently contains 4 [examples](https://github.com/rgmaidana/predictiveControl/tree/master/examples):
 
 * Voltage control in a simulated First-order RC Lowpass filter;
 * Motor shaft angular velocity control in a simulated DC Motor;
+* Angular velocity control in 3-DoF rotating rigid body (3-input-3-output MIMO);
+* Toy mock MIMO systems, modelled from arbitrary transfer matrices;
 
 You can run the examples with:
 

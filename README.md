@@ -58,9 +58,11 @@ If you want to plot the results, you must install the matplotlib package:
 
 ```pip install matplotlib```
 
-The result you will see is (for DC motor example):
+The plotted results you will see are (for DC motor example):
 
-![Resulting plot from DC Motor example](examples/dc_motor_angular_vel.png)
+![States' plot from DC Motor example](examples/dc_motor_angular_vel_states.png)
+![Inputs' plot from DC Motor example](examples/dc_motor_angular_vel_in.png)
+![Outputs' plot from DC Motor example](examples/dc_motor_angular_vel_out.png)
 
 ## To-Do
 

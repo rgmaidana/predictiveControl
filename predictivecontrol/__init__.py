@@ -32,7 +32,8 @@ class MPC:
         self.__Nc = Nc         # Control Horizon
         self.F = self.get_F()
         self.P = self.get_P()
-        self.__r = np.zeros((self.u.shape[0],1))                       # Setpoint (reference, init as 0)
+        self.__r = np.zeros((self.y.shape[0],1))        # Setpoint (reference, init as 0)
+        self.__Rw = np.zeros((self.y.shape[0],1))       # Output weights
         self.H = self.get_H()
 
         #### Optimization Restrictions ####
@@ -79,9 +80,9 @@ class MPC:
         return P
 
     def get_H(self):
-        Rb = self.__r[0]*np.eye(self.__Nc)
-        for i in range(1,self.u.shape[0]):
-            Rb = block_diag(Rb, self.__r[i]*np.eye(self.__Nc))
+        Rb = self.__Rw[0]*np.eye(self.__Nc)
+        for i in range(1,self.y.shape[0]):
+            Rb = block_diag(Rb, self.__Rw[i]*np.eye(self.__Nc))
         H = self.P.T.dot(self.P) + Rb
         return H
 
@@ -127,8 +128,12 @@ class MPC:
         # Reference is a list
         for i in range(ref.shape[0]):
             self.__r[i] = ref[i]
-        self.H = self.get_H()
-        
+
+    def set_output_weights(self, rw):
+        for i in range(rw.shape[0]):
+            self.__Rw[i] = rw[i]   
+        self.H = self.get_H() 
+    
     def run(self):
         xk = np.r_[self.x[:,-1]-self.x[:,-2], self.y[:,-1]]
         xk = xk.reshape((xk.shape[0],1))

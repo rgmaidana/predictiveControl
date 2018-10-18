@@ -149,7 +149,6 @@ class MPC:
         Rs = np.tile(self.__r[:], (self.__Np,1))
 
         # Second term of deltaU equation: -(P'*Rsb*r - P'*F*xk) = -P'*(Rs - F*xk)
-        # Multiplied by output weight matrix Q
         f = -self.P.T.dot(Rs-self.F.dot(xk))
 
         # Set up and solve QP problem

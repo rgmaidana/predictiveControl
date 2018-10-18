@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='predictivecontrol',
-      version='0.9',
+      version='1.0',
       description='Python package which implements Predictive Control techniques (e.g., MPC, E-MPC)',
       url='https://github.com/rgmaidana/predictiveControl',
       author='Renan Maidana',

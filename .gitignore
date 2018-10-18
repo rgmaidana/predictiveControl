@@ -5,3 +5,6 @@ frames/*
 compr_mpc.py
 encoder.py*
 libs/*
+__init__backup.py
+__init__backup2.py
+.vscode/launch.json
